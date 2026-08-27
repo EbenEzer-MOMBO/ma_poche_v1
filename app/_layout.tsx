@@ -1,24 +1,24 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+export const unstable_settings = { anchor: 'index' };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { c, scheme } = useTheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+        {/* La feuille d'ajout rapide se superpose à l'app, elle ne la remplace pas. */}
+        <Stack.Screen
+          name="quick-add"
+          options={{ presentation: 'transparentModal', animation: 'fade' }}
+        />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+    </SafeAreaProvider>
   );
 }

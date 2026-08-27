@@ -1,50 +1,62 @@
-# Welcome to your Expo app 👋
+# Somme
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application Expo (iOS · Android · Web) de suivi de comptes, projets et
+abonnements. Ce dépôt implémente le **lot 1** des écrans : authentification,
+accueil, dépenses & revenus, ajout rapide, abonnements.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Démarrer
 
 ```bash
-npm run reset-project
+npm install
+npx expo start        # natif + web en développement
+npx expo export --platform web   # export statique du site
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Organisation
 
-## Learn more
+```
+constants/theme.ts      Jetons du design system (couleurs, espacements, typo, ombres)
+hooks/use-theme.ts      Palette et ombres du thème courant (clair/sombre à parité)
+hooks/use-breakpoint.ts Bascule barre d'onglets ↔ barre latérale (1024px)
+data/somme.ts           Données de démonstration du lot 1
+components/ui/          Primitives du design system (Txt, Button, Card, Field, …)
+components/nav/         Barre d'onglets + FAB, barre latérale desktop
+components/auth/        Ossature des écrans d'authentification
+app/                    Routes expo-router
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Les écrans ne contiennent aucune valeur brute de couleur, d'espacement ou de
+rayon : tout passe par `constants/theme.ts`, seule source des jetons.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Routes
 
-## Join the community
+| Route | Écran de la maquette |
+|---|---|
+| `/sign-in`, `/sign-up`, `/forgot-password` | 1.1 – 1.4 |
+| `/home` | 2.1 – 2.2, et 4.2 (confirmation, via `?saved=`) |
+| `/transactions` | 3.1 – 3.3 |
+| `/quick-add` | 4.1, 4.3 |
+| `/subscriptions`, `/subscriptions/[id]` | 5.1 – 5.4 |
 
-Join our community of developers creating universal apps.
+`/projects`, `/stats`, `/accounts` et `/settings` existent pour que la
+navigation reste complète : ils affichent un état d'attente, leurs maquettes
+appartenant à un lot ultérieur.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Performance web
+
+- **Une seule police**, chargée dans `app/+html.tsx` avec `preconnect` et
+  `display=swap` — le texte s'affiche immédiatement en police système.
+- **Icônes SVG inline.** Aucune police d'icônes. Sur le web, `Icon` rend un
+  `<svg>` DOM (`icon.web.tsx`) : rendu statique identique côté serveur et
+  client, et `react-native-svg` reste hors du bundle web.
+- **Fond de page peint avant l'hydratation**, dans les deux thèmes, pour
+  qu'aucun écran blanc ne clignote.
+- **Styles statiques** (`StyleSheet.create`) et React Compiler activé : la
+  mémoïsation des composants est prise en charge à la compilation.
+- `prefers-reduced-motion` respecté.
+
+### Contrainte web à connaître
+
+`Link asChild` transmet le `style` de son enfant jusqu'à l'ancre du DOM : une
+*liste* de styles y arriverait telle quelle et casserait le rendu. Tous les
+liens passent donc par `components/ui/nav-link.tsx`, qui aplatit le style.
